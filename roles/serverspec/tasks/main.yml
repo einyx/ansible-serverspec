@@ -1,0 +1,3 @@
+---
+- include: selinux.yml tags=selinux
+- include: serverspec.yml tags=serverspec

@@ -1,0 +1,64 @@
+---
+### install lib ###
+- name: install library
+  yum: name={{ item }} state=latest
+  with_items:
+    - git
+    - gcc
+    - gcc-c++
+    - make
+    - patch
+    - readline-devel
+    - zlib-devel
+    - libyaml-devel
+    - openssl-devel
+
+### Build Ruby ###
+- name: git clone ruby-build
+  git: repo=https://github.com/sstephenson/ruby-build.git
+       dest={{ serverspec.ruby.src_dir }}
+       accept_hostkey=yes
+
+- name: ruby-build-check
+  stat: path={{ serverspec.ruby.install_dir }}/bin/ruby
+  register: ruby
+
+- name: ruby-build
+  command: ./ruby-build {{ serverspec.ruby.version }} {{ serverspec.ruby.install_dir }}
+  args:
+    chdir: "{{ serverspec.ruby.src_dir }}/bin"
+  when: ruby.stat.exists == False
+
+- name: setting path
+  lineinfile: dest=/etc/profile state=present insertafter=EOF
+              line='export PATH=$PATH:{{ serverspec.ruby.install_dir }}/bin/'
+
+### install bundler ###
+- name: bundler install check
+  stat: path={{ serverspec.ruby.install_dir }}/bin/bundle
+  register: bundle
+
+- name: install bundler
+  command: ./gem install bundler
+  args:
+    chdir: "{{ serverspec.ruby.install_dir }}/bin"
+  when: bundle.stat.exists == False
+
+### install serverspec ###
+- name: create serverspec directory
+  file: path={{ serverspec.serverspec.src_dir }}  state=directory mode=0755
+
+- name: copy Gemfile
+  template: src=Gemfile dest={{ serverspec.serverspec.src_dir }}/Gemfile
+            owner=vagrant group=vagrant
+
+- name: serverspec install check
+  stat: path={{ serverspec.ruby.install_dir }}/bin/serverspec-init
+  register: ss
+
+- name: install bundler
+  command: ./bundle install --gemfile={{ serverspec.serverspec.src_dir }}/Gemfile
+  args:
+    chdir: "{{ serverspec.ruby.install_dir }}/bin"
+  when: ss.stat.exists == False
+
