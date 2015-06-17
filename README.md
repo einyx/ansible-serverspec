@@ -33,7 +33,7 @@ ansible-serverspec is an Ansible role. Use this role to install [ServerSpec](htt
 
 ### Run the Playbook
 
-`$ ansible-playbook -i ansible.host jenkins.yml`
+`$ ansible-playbook -i hosts site.yml`
 
 ### Example Output
 
